@@ -4,22 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
   <title>호야</title>
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <meta name="theme-color" content="#fff8ee">
+  <link rel="manifest" href="manifest.webmanifest?v=2">
+  <link rel="icon" href="icon-192.png?v=2" type="image/png">
+  <link rel="apple-touch-icon" href="icon-192.png?v=2">
+  <meta name="theme-color" content="#ffffff">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="호야">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <style>
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#fff8ee}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#fff}
     body{font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif}
-    #app{position:fixed;inset:0;background:#fff8ee}
+    #app{position:fixed;inset:0;background:#fff}
     #hoyaFrame{width:100%;height:100%;border:0;display:block;background:#fff8ee}
-    #splash{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff8ee;transition:opacity .2s ease}
+    #splash{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff;transition:opacity .2s ease}
     #splash.hide{opacity:0;pointer-events:none}
-    #splash img{width:118px;height:118px}
+    #splash img{width:132px;height:132px;border-radius:28px;object-fit:cover}
     #splash strong{margin-top:14px;font-size:28px;color:#181818}
     #splash span{margin-top:5px;font-size:14px;color:#777}
     #installBtn{position:fixed;right:14px;top:calc(12px + env(safe-area-inset-top));z-index:20;border:0;border-radius:999px;padding:10px 14px;background:#111;color:#fff;font-size:13px;font-weight:800;box-shadow:0 5px 18px rgba(0,0,0,.18)}
@@ -29,7 +30,7 @@
 <body>
   <div id="app">
     <div id="splash">
-      <img src="icon.svg" alt="호야">
+      <img src="icon-192.png?v=2" alt="호야">
       <strong>호야</strong>
       <span>밥 체크 불러오는 중…</span>
     </div>
@@ -55,7 +56,7 @@
     });
 
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js'));
+      window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js?v=2'));
     }
 
     window.addEventListener('beforeinstallprompt', event => {
