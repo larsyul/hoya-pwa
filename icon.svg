@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="호야">
+  <rect width="512" height="512" rx="112" fill="#fff8ee"/>
+  <g transform="translate(256 222) rotate(45) translate(-256 -222)" fill="#111111">
+    <ellipse cx="256" cy="255" rx="88" ry="72"/>
+    <ellipse cx="177" cy="156" rx="38" ry="51"/>
+    <ellipse cx="238" cy="131" rx="39" ry="53"/>
+    <ellipse cx="301" cy="138" rx="39" ry="53"/>
+    <ellipse cx="354" cy="176" rx="37" ry="50"/>
+  </g>
+  <text x="256" y="452" text-anchor="middle" font-size="58" font-weight="800" font-family="system-ui, -apple-system, 'Noto Sans KR', sans-serif" fill="#111111">호야</text>
+</svg>
