@@ -1,23 +1,84 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>호야</title>
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#fff8ee">
-<style>
-body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;background:#fff8ee;font-family:Arial,sans-serif;text-align:center;color:#222}
-.box{padding:30px}.paw{font-size:72px}h1{font-size:42px;margin:12px}button{border:0;border-radius:20px;padding:15px 28px;background:#f39235;color:white;font-size:18px;font-weight:bold}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <title>호야</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#fff8ee">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="호야">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <style>
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#fff8ee}
+    body{font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif}
+    #app{position:fixed;inset:0;background:#fff8ee}
+    #hoyaFrame{width:100%;height:100%;border:0;display:block;background:#fff8ee}
+    #splash{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff8ee;transition:opacity .2s ease}
+    #splash.hide{opacity:0;pointer-events:none}
+    #splash img{width:118px;height:118px}
+    #splash strong{margin-top:14px;font-size:28px;color:#181818}
+    #splash span{margin-top:5px;font-size:14px;color:#777}
+    #installBtn{position:fixed;right:14px;top:calc(12px + env(safe-area-inset-top));z-index:20;border:0;border-radius:999px;padding:10px 14px;background:#111;color:#fff;font-size:13px;font-weight:800;box-shadow:0 5px 18px rgba(0,0,0,.18)}
+    #installBtn[hidden]{display:none}
+  </style>
 </head>
 <body>
-<div class="box">
-<div class="paw">🐾</div>
-<h1>호야</h1>
-<p>가족 밥 체크 앱</p>
-<button onclick="location.href='https://script.google.com/macros/s/AKfycbwbRIubpr1JJsR5HIHqBzyvVosfR0z3hXzv1cHTqUUAU3S0PFPzgwiTgrRnC8rVF_w9/exec'">호야 열기</button>
-</div>
-<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('service-worker.js')}</script>
+  <div id="app">
+    <div id="splash">
+      <img src="icon.svg" alt="호야">
+      <strong>호야</strong>
+      <span>밥 체크 불러오는 중…</span>
+    </div>
+
+    <iframe
+      id="hoyaFrame"
+      title="호야 밥 체크"
+      src="https://script.google.com/macros/s/AKfycbwbRIubpr1JJsR5HIHqBzyvVosfR0z3hXzv1cHTqUUAU3S0PFPzgwiTgrRnC8rVF_w9/exec"
+      allow="clipboard-write"
+    ></iframe>
+  </div>
+
+  <button id="installBtn" hidden>호야 설치</button>
+
+  <script>
+    const splash = document.getElementById('splash');
+    const frame = document.getElementById('hoyaFrame');
+    const installBtn = document.getElementById('installBtn');
+    let deferredPrompt = null;
+
+    frame.addEventListener('load', () => {
+      setTimeout(() => splash.classList.add('hide'), 150);
+    });
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js'));
+    }
+
+    window.addEventListener('beforeinstallprompt', event => {
+      event.preventDefault();
+      deferredPrompt = event;
+      installBtn.hidden = false;
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      installBtn.hidden = true;
+    });
+
+    window.addEventListener('appinstalled', () => {
+      installBtn.hidden = true;
+      deferredPrompt = null;
+    });
+
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (standalone) installBtn.hidden = true;
+  </script>
 </body>
 </html>
