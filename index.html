@@ -1,34 +1,24 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>호야</title>
-<link rel="manifest" href="manifest.webmanifest?v=4">
-<link rel="icon" href="icon-192.png?v=4" type="image/png">
-<link rel="apple-touch-icon" href="icon-192.png?v=4">
-<meta name="theme-color" content="#ffffff">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="호야">
-<style>
-html,body{margin:0;height:100%;font-family:system-ui,"Noto Sans KR",sans-serif;background:#fff8ee}
-body{display:flex;align-items:center;justify-content:center;text-align:center}
-.box{padding:30px}
-.icon{width:140px;height:140px;border-radius:30px}
-h1{font-size:34px;margin:18px 0 8px}
-p{color:#777}
-button{border:0;border-radius:25px;padding:15px 28px;background:#f39235;color:#fff;font-size:17px;font-weight:bold}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>호야</title>
+  <link rel="manifest" href="./manifest.webmanifest?v=5">
+  <link rel="icon" href="./icon-192.png?v=5" type="image/png">
+  <link rel="apple-touch-icon" href="./icon-192.png?v=5">
+  <meta name="theme-color" content="#fff8ee">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="호야">
+  <style>
+    html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#fff8ee}
+    #hoyaApp{position:fixed;inset:0;width:100%;height:100%;border:0;margin:0;padding:0;display:block;background:#fff8ee}
+  </style>
 </head>
 <body>
-<div class="box">
-<img class="icon" src="icon-192.png?v=4" alt="호야">
-<h1>호야</h1>
-<p>가족 밥 체크 앱</p>
-<button onclick="location.href='https://script.google.com/macros/s/AKfycbwbRIubpr1JJsR5HIHqBzyvVosfR0z3hXzv1cHTqUUAU3S0PFPzgwiTgrRnC8rVF_w9/exec'">호야 밥 확인</button>
-</div>
-<script>
-if('serviceWorker' in navigator){navigator.serviceWorker.register('./service-worker.js?v=5')}
-</script>
+  <iframe id="hoyaApp" src="https://script.google.com/macros/s/AKfycbwbRIubpr1JJsR5HIHqBzyvVosfR0z3hXzv1cHTqUUAU3S0PFPzgwiTgrRnC8rVF_w9/exec" allow="fullscreen"></iframe>
+  <script>
+    if('serviceWorker' in navigator){navigator.serviceWorker.register('./service-worker.js?v=5')}
+  </script>
 </body>
 </html>
