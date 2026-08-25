@@ -3,9 +3,18 @@
   "short_name": "호야",
   "description": "호야 가족 밥 체크 앱",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone"],
   "background_color": "#fff8ee",
   "theme_color": "#fff8ee",
   "orientation": "portrait",
-  "icons": []
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
 }
