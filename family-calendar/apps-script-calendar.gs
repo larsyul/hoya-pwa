@@ -1,48 +1,48 @@
-/* =========================================================
-   가족달력 API 추가 코드
-   사용법:
-   1) 기존 Code.gs의 doGet() 함수를 아래 doGet(e)로 교체
-   2) 이 파일의 나머지 코드를 Code.gs 맨 아래에 붙여넣기
-   3) 저장 후 기존 웹 앱 배포를 "새 버전"으로 업데이트
-   ========================================================= */
+/** @OnlyCurrentDoc */
 
-const FAMILY_CAL_SHEET = '가족달력';
-const FAMILY_OWNERS = ['가족','아빠','엄마','현준','현아'];
+const SHEET_NAME = '가족달력';
+const TZ = 'Asia/Seoul';
+const OWNERS = ['가족', '아빠', '엄마', '현준', '현아'];
 
-/* ★ 기존 doGet() 대신 이 함수 사용 */
 function doGet(e) {
   ensureSheet_();
 
-  const action = e && e.parameter ? String(e.parameter.action || '') : '';
+  const p = (e && e.parameter) ? e.parameter : {};
+  const action = String(p.action || '');
 
-  if (action.indexOf('calendar') === 0) {
-    return handleFamilyCalendarApi_(e);
+  try {
+    let result;
+
+    if (action === 'calendarState') {
+      result = getCalendarState_(Number(p.year), Number(p.month));
+    } else if (action === 'calendarAdd') {
+      result = addCalendarEvent_(p.date, p.owner, p.text);
+    } else if (action === 'calendarUpdate') {
+      result = updateCalendarEvent_(p.id, p.date, p.owner, p.text);
+    } else if (action === 'calendarDelete') {
+      result = deleteCalendarEvent_(p.id);
+    } else {
+      result = { ok: true, message: '가족달력 API' };
+    }
+
+    return jsonp_(p.callback, result);
+
+  } catch (err) {
+    return jsonp_(p.callback, {
+      ok: false,
+      message: err && err.message ? err.message : '오류가 발생했습니다.'
+    });
   }
-
-  return HtmlService
-    .createTemplateFromFile('index')
-    .evaluate()
-    .setTitle('호야 밥 체크')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
-
-/* =========================
-   가족달력 시트
-========================= */
-
-function ensureFamilyCalendarSheet_() {
+function ensureSheet_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sh = ss.getSheetByName(FAMILY_CAL_SHEET);
+  let sh = ss.getSheetByName(SHEET_NAME);
 
   if (!sh) {
-    sh = ss.insertSheet(FAMILY_CAL_SHEET);
+    sh = ss.insertSheet(SHEET_NAME);
     sh.getRange(1, 1, 1, 5).setValues([[
-      'ID',
-      '날짜',
-      '대상',
-      '내용',
-      '등록시각'
+      'ID', '날짜', '대상', '내용', '등록시각'
     ]]);
     sh.setFrozenRows(1);
     sh.getRange('B:B').setNumberFormat('yyyy-mm-dd');
@@ -52,59 +52,7 @@ function ensureFamilyCalendarSheet_() {
   return sh;
 }
 
-
-/* =========================
-   가족달력 JSONP API
-========================= */
-
-function handleFamilyCalendarApi_(e) {
-  const p = e.parameter || {};
-  const action = String(p.action || '');
-
-  try {
-    let result;
-
-    if (action === 'calendarState') {
-      result = familyCalendarState_(
-        Number(p.year),
-        Number(p.month)
-      );
-    } else if (action === 'calendarAdd') {
-      result = familyCalendarAdd_(
-        p.date,
-        p.owner,
-        p.text
-      );
-    } else if (action === 'calendarUpdate') {
-      result = familyCalendarUpdate_(
-        p.id,
-        p.date,
-        p.owner,
-        p.text
-      );
-    } else if (action === 'calendarDelete') {
-      result = familyCalendarDelete_(p.id);
-    } else {
-      result = {
-        ok: false,
-        message: '지원하지 않는 요청입니다.'
-      };
-    }
-
-    return jsonpResponse_(p.callback, result);
-
-  } catch (err) {
-    return jsonpResponse_(p.callback, {
-      ok: false,
-      message: err && err.message
-        ? err.message
-        : '오류가 발생했습니다.'
-    });
-  }
-}
-
-
-function jsonpResponse_(callback, data) {
+function jsonp_(callback, data) {
   let cb = String(callback || 'callback');
 
   if (!/^[A-Za-z_$][0-9A-Za-z_$]*$/.test(cb)) {
@@ -112,88 +60,59 @@ function jsonpResponse_(callback, data) {
   }
 
   return ContentService
-    .createTextOutput(
-      cb + '(' + JSON.stringify(data) + ');'
-    )
-    .setMimeType(
-      ContentService.MimeType.JAVASCRIPT
-    );
+    .createTextOutput(cb + '(' + JSON.stringify(data) + ');')
+    .setMimeType(ContentService.MimeType.JAVASCRIPT);
 }
 
+function normalizeDate_(value) {
+  if (!value) return '';
 
-/* =========================
-   월간 상태
-========================= */
+  if (value instanceof Date && !isNaN(value.getTime())) {
+    return Utilities.formatDate(value, TZ, 'yyyy-MM-dd');
+  }
 
-function familyCalendarState_(year, month) {
+  const text = String(value).trim();
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+    return text;
+  }
+
+  const parsed = new Date(value);
+
+  if (!isNaN(parsed.getTime())) {
+    return Utilities.formatDate(parsed, TZ, 'yyyy-MM-dd');
+  }
+
+  return text;
+}
+
+function getCalendarState_(year, month) {
   const now = new Date();
 
   if (!year || !month || month < 1 || month > 12) {
-    year = Number(
-      Utilities.formatDate(now, TZ, 'yyyy')
-    );
-    month = Number(
-      Utilities.formatDate(now, TZ, 'M')
-    );
+    year = Number(Utilities.formatDate(now, TZ, 'yyyy'));
+    month = Number(Utilities.formatDate(now, TZ, 'M'));
   }
 
-  const first =
-    new Date(year, month - 1, 1);
+  const first = new Date(year, month - 1, 1);
+  const start = new Date(first);
+  start.setDate(start.getDate() - start.getDay());
 
-  const start =
-    new Date(first);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 42);
 
-  start.setDate(
-    start.getDate() - start.getDay()
-  );
+  const startKey = Utilities.formatDate(start, TZ, 'yyyy-MM-dd');
+  const endKey = Utilities.formatDate(end, TZ, 'yyyy-MM-dd');
 
-  const end =
-    new Date(start);
-
-  end.setDate(
-    end.getDate() + 42
-  );
-
-  const startKey =
-    Utilities.formatDate(
-      start,
-      TZ,
-      'yyyy-MM-dd'
-    );
-
-  const endKey =
-    Utilities.formatDate(
-      end,
-      TZ,
-      'yyyy-MM-dd'
-    );
-
-  const sh =
-    ensureFamilyCalendarSheet_();
-
-  const values =
-    sh.getDataRange().getValues();
-
+  const sh = ensureSheet_();
+  const values = sh.getDataRange().getValues();
   const events = [];
 
   for (let i = 1; i < values.length; i++) {
-    const [
-      id,
-      date,
-      owner,
-      text
-    ] = values[i];
+    const [id, date, owner, text] = values[i];
+    const dateKey = normalizeDate_(date);
 
-    const dateKey =
-      normalizeDateKey_(date);
-
-    if (
-      !dateKey ||
-      dateKey < startKey ||
-      dateKey >= endKey
-    ) {
-      continue;
-    }
+    if (!dateKey || dateKey < startKey || dateKey >= endKey) continue;
 
     events.push({
       id: String(id || ''),
@@ -203,48 +122,22 @@ function familyCalendarState_(year, month) {
     });
   }
 
-  events.sort((a, b) => {
-    if (a.date !== b.date) {
-      return a.date.localeCompare(b.date);
-    }
-
-    return (
-      FAMILY_OWNERS.indexOf(a.owner) -
-      FAMILY_OWNERS.indexOf(b.owner)
-    );
-  });
-
   return {
     ok: true,
     events: events,
-    holidays:
-      koreanHolidayMap_(start, end),
-    serverTime:
-      new Date().getTime()
+    holidays: getKoreanHolidays_(start, end),
+    serverTime: new Date().getTime()
   };
 }
 
+function addCalendarEvent_(date, owner, text) {
+  validateInput_(date, owner, text);
 
-/* =========================
-   일정 추가 / 수정 / 삭제
-========================= */
-
-function familyCalendarAdd_(date, owner, text) {
-  validateFamilyCalendarInput_(
-    date,
-    owner,
-    text
-  );
-
-  const lock =
-    LockService.getScriptLock();
-
+  const lock = LockService.getScriptLock();
   lock.waitLock(5000);
 
   try {
-    const sh =
-      ensureFamilyCalendarSheet_();
-
+    const sh = ensureSheet_();
     sh.appendRow([
       Utilities.getUuid(),
       String(date),
@@ -253,233 +146,157 @@ function familyCalendarAdd_(date, owner, text) {
       new Date()
     ]);
 
-    return {
-      ok: true,
-      message: '일정을 저장했습니다.'
-    };
-
+    return { ok: true };
   } finally {
     lock.releaseLock();
   }
 }
 
+function updateCalendarEvent_(id, date, owner, text) {
+  validateInput_(date, owner, text);
 
-function familyCalendarUpdate_(
-  id,
-  date,
-  owner,
-  text
-) {
-  id = String(id || '').trim();
-
-  if (!id) {
-    throw new Error(
-      '수정할 일정이 없습니다.'
-    );
-  }
-
-  validateFamilyCalendarInput_(
-    date,
-    owner,
-    text
-  );
-
-  const lock =
-    LockService.getScriptLock();
-
+  const lock = LockService.getScriptLock();
   lock.waitLock(5000);
 
   try {
-    const sh =
-      ensureFamilyCalendarSheet_();
-
-    const values =
-      sh.getDataRange().getValues();
+    const sh = ensureSheet_();
+    const values = sh.getDataRange().getValues();
 
     for (let i = 1; i < values.length; i++) {
-      if (String(values[i][0] || '') === id) {
-        sh.getRange(i + 1, 2, 1, 3)
-          .setValues([[
-            String(date),
-            String(owner),
-            String(text).trim()
-          ]]);
+      if (String(values[i][0] || '') === String(id || '')) {
+        sh.getRange(i + 1, 2, 1, 3).setValues([[
+          String(date),
+          String(owner),
+          String(text).trim()
+        ]]);
 
-        return {
-          ok: true,
-          message: '일정을 수정했습니다.'
-        };
+        return { ok: true };
       }
     }
 
-    return {
-      ok: false,
-      message: '일정을 찾지 못했습니다.'
-    };
-
+    return { ok: false, message: '일정을 찾지 못했습니다.' };
   } finally {
     lock.releaseLock();
   }
 }
 
-
-function familyCalendarDelete_(id) {
-  id = String(id || '').trim();
-
-  if (!id) {
-    throw new Error(
-      '삭제할 일정이 없습니다.'
-    );
-  }
-
-  const lock =
-    LockService.getScriptLock();
-
+function deleteCalendarEvent_(id) {
+  const lock = LockService.getScriptLock();
   lock.waitLock(5000);
 
   try {
-    const sh =
-      ensureFamilyCalendarSheet_();
+    const sh = ensureSheet_();
+    const values = sh.getDataRange().getValues();
 
-    const values =
-      sh.getDataRange().getValues();
-
-    for (
-      let i = values.length - 1;
-      i >= 1;
-      i--
-    ) {
-      if (String(values[i][0] || '') === id) {
+    for (let i = values.length - 1; i >= 1; i--) {
+      if (String(values[i][0] || '') === String(id || '')) {
         sh.deleteRow(i + 1);
-
-        return {
-          ok: true,
-          message: '일정을 삭제했습니다.'
-        };
+        return { ok: true };
       }
     }
 
-    return {
-      ok: false,
-      message: '일정을 찾지 못했습니다.'
-    };
-
+    return { ok: false, message: '일정을 찾지 못했습니다.' };
   } finally {
     lock.releaseLock();
   }
 }
 
-
-function validateFamilyCalendarInput_(
-  date,
-  owner,
-  text
-) {
+function validateInput_(date, owner, text) {
   date = String(date || '').trim();
   owner = String(owner || '').trim();
   text = String(text || '').trim();
 
-  if (
-    !/^\d{4}-\d{2}-\d{2}$/.test(date)
-  ) {
-    throw new Error(
-      '날짜가 올바르지 않습니다.'
-    );
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    throw new Error('날짜가 올바르지 않습니다.');
   }
 
-  if (
-    FAMILY_OWNERS.indexOf(owner) === -1
-  ) {
-    throw new Error(
-      '가족 구성원을 확인해 주세요.'
-    );
+  if (OWNERS.indexOf(owner) === -1) {
+    throw new Error('가족 구분을 확인해 주세요.');
   }
 
   if (!text) {
-    throw new Error(
-      '일정 내용을 입력해 주세요.'
-    );
+    throw new Error('일정 내용을 입력해 주세요.');
   }
 
   if (text.length > 40) {
-    throw new Error(
-      '일정은 40자 이내로 입력해 주세요.'
-    );
+    throw new Error('일정은 40자 이내로 입력해 주세요.');
   }
 }
 
-
-/* =========================
-   대한민국 공휴일
-   Google 공휴일 캘린더 사용
-========================= */
-
-function koreanHolidayMap_(start, end) {
+/*
+  대한민국 공휴일:
+  개인 Google Calendar 권한을 요구하지 않도록
+  공개된 대한민국 공휴일 ICS 파일만 읽습니다.
+*/
+function getKoreanHolidays_(start, end) {
   const result = {};
 
-  const calendarIds = [
-    'ko.south_korea#holiday@group.v.calendar.google.com',
-    'en.south_korea#holiday@group.v.calendar.google.com'
-  ];
+  const url =
+    'https://calendar.google.com/calendar/ical/' +
+    'ko.south_korea%23holiday%40group.v.calendar.google.com/' +
+    'public/basic.ics';
 
-  for (
-    let c = 0;
-    c < calendarIds.length;
-    c++
-  ) {
-    try {
-      const cal =
-        CalendarApp.getCalendarById(
-          calendarIds[c]
-        );
+  try {
+    const response = UrlFetchApp.fetch(url, {
+      muteHttpExceptions: true
+    });
 
-      if (!cal) {
-        continue;
-      }
+    if (response.getResponseCode() === 200) {
+      let ics = response.getContentText('UTF-8');
 
-      const list =
-        cal.getEvents(start, end);
+      // ICS 줄바꿈(folding) 해제
+      ics = ics.replace(/\r?\n[ \t]/g, '');
 
-      list.forEach(event => {
+      const blocks = ics.split('BEGIN:VEVENT');
+      const startKey = Utilities.formatDate(start, TZ, 'yyyy-MM-dd');
+      const endKey = Utilities.formatDate(end, TZ, 'yyyy-MM-dd');
+
+      for (let i = 1; i < blocks.length; i++) {
+        const block = blocks[i];
+
+        const dateMatch =
+          block.match(/DTSTART(?:;VALUE=DATE)?:([0-9]{8})/);
+
+        const titleMatch =
+          block.match(/SUMMARY(?:;[^:]*)?:(.*)/);
+
+        if (!dateMatch || !titleMatch) continue;
+
+        const raw = dateMatch[1];
         const dateKey =
-          Utilities.formatDate(
-            event.getStartTime(),
-            TZ,
-            'yyyy-MM-dd'
-          );
+          raw.slice(0, 4) + '-' +
+          raw.slice(4, 6) + '-' +
+          raw.slice(6, 8);
 
-        result[dateKey] =
-          String(event.getTitle() || '');
-      });
+        if (dateKey < startKey || dateKey >= endKey) continue;
 
-      if (
-        Object.keys(result).length > 0
-      ) {
-        break;
+        let title = titleMatch[1]
+          .split(/\r?\n/)[0]
+          .replace(/\\,/g, ',')
+          .replace(/\\;/g, ';')
+          .replace(/\\n/gi, ' ')
+          .trim();
+
+        if (title) {
+          result[dateKey] = title;
+        }
       }
-
-    } catch (err) {
-      // 다음 캘린더 ID 시도
     }
+  } catch (err) {
+    // 아래 고정 공휴일 fallback 사용
   }
 
-  // Google 공휴일 캘린더를 불러오지 못했을 때
-  // 고정 날짜 공휴일만 최소 표시
-  if (
-    Object.keys(result).length === 0
-  ) {
-    const years = {};
-
-    let d = new Date(start);
+  // 공개 공휴일 데이터를 못 불러온 경우 최소한의 고정 공휴일 표시
+  if (Object.keys(result).length === 0) {
+    const years = new Set();
+    const d = new Date(start);
 
     while (d < end) {
-      years[d.getFullYear()] = true;
-      d.setFullYear(
-        d.getFullYear() + 1
-      );
+      years.add(d.getFullYear());
+      d.setFullYear(d.getFullYear() + 1);
     }
 
-    Object.keys(years).forEach(y => {
+    years.forEach(y => {
       result[y + '-01-01'] = '신정';
       result[y + '-03-01'] = '삼일절';
       result[y + '-05-05'] = '어린이날';
