@@ -1,0 +1,19 @@
+{
+  "name": "가족달력",
+  "short_name": "가족달력",
+  "description": "우리 가족이 함께 보는 한달 달력",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fffaf2",
+  "theme_color": "#fffaf2",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
