@@ -1,20 +1,19 @@
 /** @OnlyCurrentDoc */
 
-const SPREADSHEET_ID = '1dT30c_Im0UuOMaLgYmyc4t4yLGduhug6T4abpFs5CAQ';
 const SHEET_NAME = '가족달력';
 const TZ = 'Asia/Seoul';
 const OWNERS = ['가족', '아빠', '엄마', '현준', '현아'];
 
 function doGet(e) {
-  ensureSheet_();
-
   const p = (e && e.parameter) ? e.parameter : {};
   const action = String(p.action || '');
 
   try {
     let result;
 
-    if (action === 'calendarState') {
+    if (action === 'ping') {
+      result = { ok: true, message: '가족달력 API 연결 정상', serverTime: new Date().getTime() };
+    } else if (action === 'calendarState') {
       result = getCalendarState_(Number(p.year), Number(p.month));
     } else if (action === 'calendarAdd') {
       result = addCalendarEvent_(p.date, p.owner, p.text);
@@ -37,7 +36,8 @@ function doGet(e) {
 }
 
 function ensureSheet_() {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (!ss) throw new Error('가족달력 스프레드시트를 찾지 못했습니다. 스프레드시트에서 확장 프로그램 → Apps Script로 만든 프로젝트인지 확인해 주세요.');
   let sh = ss.getSheetByName(SHEET_NAME);
 
   if (!sh) {
