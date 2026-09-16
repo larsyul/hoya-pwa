@@ -1,5 +1,6 @@
 /** @OnlyCurrentDoc */
 
+const SPREADSHEET_ID = '1dT30c_Im0UuOMaLgYmyc4t4yLGduhug6T4abpFs5CAQ';
 const SHEET_NAME = '가족달력';
 const TZ = 'Asia/Seoul';
 const OWNERS = ['가족', '아빠', '엄마', '현준', '현아'];
@@ -36,7 +37,7 @@ function doGet(e) {
 }
 
 function ensureSheet_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   let sh = ss.getSheetByName(SHEET_NAME);
 
   if (!sh) {
