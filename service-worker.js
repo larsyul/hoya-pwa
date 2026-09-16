@@ -1,10 +1,10 @@
-const CACHE_NAME = 'hoya-pwa-v5';
+const CACHE_NAME = 'hoya-pwa-v6';
 
 const APP_SHELL = [
   './',
   './index.html',
-  './manifest.webmanifest?v=4',
-  './icon-192.png?v=4'
+  './manifest.webmanifest?v=6',
+  './icon-192.png?v=6'
 ];
 
 self.addEventListener('install', event => {
