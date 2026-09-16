@@ -1,19 +1,20 @@
 {
+  "id": "/hoya-pwa/family-calendar/",
   "name": "가족달력",
   "short_name": "가족달력",
   "description": "우리 가족이 함께 보는 한달 달력",
-  "start_url": "./",
-  "scope": "./",
+  "start_url": "/hoya-pwa/family-calendar/?app=family-calendar-v3",
+  "scope": "/hoya-pwa/family-calendar/",
   "display": "standalone",
   "background_color": "#fffaf2",
   "theme_color": "#fffaf2",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "icon.svg",
+      "src": "icon.svg?v=3",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }
