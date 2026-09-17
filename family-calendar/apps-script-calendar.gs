@@ -1,5 +1,4 @@
-/** @OnlyCurrentDoc */
-
+const SPREADSHEET_ID = '1dT30c_Im0UuOMaLgYmyc4t4yLGduhug6T4abpFs5CAQ';
 const SHEET_NAME = '가족달력';
 const TZ = 'Asia/Seoul';
 const OWNERS = ['가족', '아빠', '엄마', '현준', '현아'];
@@ -36,8 +35,7 @@ function doGet(e) {
 }
 
 function ensureSheet_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  if (!ss) throw new Error('가족달력 스프레드시트를 찾지 못했습니다. 스프레드시트에서 확장 프로그램 → Apps Script로 만든 프로젝트인지 확인해 주세요.');
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   let sh = ss.getSheetByName(SHEET_NAME);
 
   if (!sh) {
@@ -224,11 +222,6 @@ function validateInput_(date, owner, text) {
   }
 }
 
-/*
-  대한민국 공휴일:
-  개인 Google Calendar 권한을 요구하지 않도록
-  공개된 대한민국 공휴일 ICS 파일만 읽습니다.
-*/
 function getKoreanHolidays_(start, end) {
   const result = {};
 
@@ -244,8 +237,6 @@ function getKoreanHolidays_(start, end) {
 
     if (response.getResponseCode() === 200) {
       let ics = response.getContentText('UTF-8');
-
-      // ICS 줄바꿈(folding) 해제
       ics = ics.replace(/\r?\n[ \t]/g, '');
 
       const blocks = ics.split('BEGIN:VEVENT');
@@ -254,12 +245,8 @@ function getKoreanHolidays_(start, end) {
 
       for (let i = 1; i < blocks.length; i++) {
         const block = blocks[i];
-
-        const dateMatch =
-          block.match(/DTSTART(?:;VALUE=DATE)?:([0-9]{8})/);
-
-        const titleMatch =
-          block.match(/SUMMARY(?:;[^:]*)?:(.*)/);
+        const dateMatch = block.match(/DTSTART(?:;VALUE=DATE)?:([0-9]{8})/);
+        const titleMatch = block.match(/SUMMARY(?:;[^:]*)?:(.*)/);
 
         if (!dateMatch || !titleMatch) continue;
 
@@ -271,23 +258,18 @@ function getKoreanHolidays_(start, end) {
 
         if (dateKey < startKey || dateKey >= endKey) continue;
 
-        let title = titleMatch[1]
+        const title = titleMatch[1]
           .split(/\r?\n/)[0]
           .replace(/\\,/g, ',')
           .replace(/\\;/g, ';')
           .replace(/\\n/gi, ' ')
           .trim();
 
-        if (title) {
-          result[dateKey] = title;
-        }
+        if (title) result[dateKey] = title;
       }
     }
-  } catch (err) {
-    // 아래 고정 공휴일 fallback 사용
-  }
+  } catch (err) {}
 
-  // 공개 공휴일 데이터를 못 불러온 경우 최소한의 고정 공휴일 표시
   if (Object.keys(result).length === 0) {
     const years = new Set();
     const d = new Date(start);
