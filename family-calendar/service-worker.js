@@ -1,9 +1,9 @@
-const CACHE_NAME='family-calendar-v3';
+const CACHE_NAME='family-calendar-v4';
 const APP_SHELL=[
   './',
   './index.html',
-  './manifest.webmanifest?v=3',
-  './icon.svg?v=3'
+  './manifest.webmanifest?v=4',
+  './icon.svg?v=4'
 ];
 
 self.addEventListener('install',event=>{
@@ -23,7 +23,6 @@ self.addEventListener('activate',event=>{
 self.addEventListener('fetch',event=>{
   const url=new URL(event.request.url);
   if(url.origin!==self.location.origin)return;
-
   event.respondWith(
     fetch(event.request,{cache:'no-store'})
       .then(response=>{
